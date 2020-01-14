@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t bernasconi/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+   - docker run -e CI=true USERNAME/react-test npm test
+
+after_success:
+  - docker build -t bernasconi/multi-client ./client
+  - docker build -t bernasconi/multi-nginx ./nginx
+  - docker build -t bernasconi/multi-server ./server
+  - docker build -t bernasconi/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # Take those images and push them to docker hub
+  - docker push bernasconi/multi-client
+  - docker push bernasconi/multi-nginx
+  - docker push bernasconi/multi-server
+  - docker push bernasconi/multi-worker
